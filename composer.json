@@ -1,0 +1,17 @@
+{
+    "name": "atk4/symfony-bundle",
+    "description": "Agile Toolkit 4 Symfony Bundle",
+    "type": "symfony-bundle",
+    "require-dev": {
+        "symfony/dependency-injection": "^6.3",
+        "symfony/config": "^6.3",
+        "symfony/http-kernel": "^6.3",
+        "symfony/yaml": "^6.3",
+        "atk4/ui": "dev-develop"
+    },
+    "autoload": {
+        "psr-4": {
+            "Atk4\\Symfony\\Module\\": "/src"
+        }
+    }
+}
