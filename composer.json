@@ -1,5 +1,5 @@
 {
-    "name": "atk4/symfony-bundle",
+    "name": "abbadon1334/symfony-atk4-bundle",
     "description": "Agile Toolkit 4 Symfony Bundle",
     "type": "symfony-bundle",
     "require": {
