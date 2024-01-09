@@ -2,57 +2,46 @@
 
 namespace Atk4\Symfony\Module;
 
-use Atk4\Core\Exception;
-use Atk4\Ui\App;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
+use App\Kernel;
+use Atk4\Symfony\Module\Atk4\Ui\App;
+use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 class Atk4App
 {
     private ?App $app = null;
 
+    private array $config;
+
     public function __construct(
         array $config,
-        protected RequestStack $requestStack
-    )
-    {
-        $this->app = new App(
-            $this->normalizeSymfonyConfig($config)
-        );
-    }
+        protected RequestStack $requestStack,
+        protected Kernel $kernel,
+        protected Security $security
+    ) {
+        $this->config = $this->normalizeSymfonyConfig($config);
+        $this->config['container'] = $kernel->getContainer();
 
-    public function getApp(): App
-    {
-        return $this->app;
-    }
-
-    public function handleRequest($callback): \Symfony\Component\HttpFoundation\Response
-    {
-        try {
-            $response = $callback($this->app);
-
-            if ($response instanceof \Symfony\Component\HttpFoundation\Response) {
-                return $response;
-            }
-
-            if ($response !== null) {
-                throw new Exception('Callback must return null or Symfony\Component\HttpFoundation\Response');
-            }
-
-            $this->app->run();
-        } catch (\Atk4\Ui\Exception\ExitApplicationError $e) {
-        } catch (\Throwable $e) {
-            $this->app->caughtException($e);
+        if (isset($this->config['security'])) {
+            unset($this->config['security']);
         }
 
-        return new \Symfony\Component\HttpFoundation\Response(
-            $this->app->getResponse()->getBody()->getContents(),
-            $this->app->getResponse()->getStatusCode(),
-            $this->app->getResponse()->getHeaders()
-        );
+        if (isset($this->config['persistences'])) {
+            unset($this->config['persistences']);
+        }
+    }
+
+    /**
+     * @throws \ErrorException
+     */
+    public function getApp(): App
+    {
+        if (null === $this->app) {
+            $this->config['security'] = $this->security;
+            $this->app = new App($this->config);
+        }
+
+        return $this->app;
     }
 
     private function normalizeSymfonyConfig(array $config)
@@ -66,11 +55,9 @@ class Atk4App
         $config['cdn']['chart.js'] = $config['cdn']['chart'];
         unset($config['cdn']['chart']);
 
-
-        foreach($config['cdn'] as &$uri) {
+        foreach ($config['cdn'] as &$uri) {
             $uri = $this->requestStack->getCurrentRequest()->getUriForPath($uri);
         }
-
 
         return $config;
     }

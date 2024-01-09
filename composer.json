@@ -2,12 +2,33 @@
     "name": "abbadon1334/symfony-atk4-bundle",
     "description": "Agile Toolkit 4 Symfony Bundle",
     "type": "symfony-bundle",
+    "license": "MIT",
+    "minimum-stability": "dev",
+    "authors": [
+        {
+            "name": "Francesco Danti",
+            "email": "fdanti@gmail.com"
+        }
+    ],
     "require": {
         "symfony/dependency-injection": "^6.3",
         "symfony/config": "^6.3",
         "symfony/http-kernel": "^6.3",
         "symfony/yaml": "^6.3",
-        "atk4/ui": "dev-develop"
+        "symfony/translation": "6.3.*",
+        "rogervila/array-diff-multidimensional": "2.1.0",
+        "atk4/ui": "5.0.0",
+        "symfony/security-bundle": "v6.3.11",
+        "ramsey/uuid": "4.7.4",
+        "matomo/device-detector": "^6.1",
+        "mobiledetect/mobiledetectlib": "^3.74",
+        "symfony/filesystem": "6.3.*",
+        "nesbot/carbon": "2.63.0"
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.26",
+        "phpstan/phpstan": "^1.10.35",
+        "rector/rector": "^0.18.3"
     },
     "autoload": {
         "psr-4": {

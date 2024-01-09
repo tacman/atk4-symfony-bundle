@@ -5,5 +5,21 @@ services:
   _defaults:
     autowire: true
     autoconfigure: true
+    public: true
 
   Atk4\Symfony\Module\Atk4App: ~
+  Atk4\Symfony\Module\Atk4Persistence: ~
+  Atk4\Symfony\Module\Middleware\RequestMiddlewareListener:
+    arguments:
+      - '@service_container'
+      - '@Atk4\Symfony\Module\Atk4App'
+    tags:
+      - { name: kernel.event_listener, event: kernel.request, method: onKernelRequest }
+      - { name: kernel.event_listener, event: kernel.controller_arguments, method: onKernelControllerArguments }
+      - { name: kernel.event_listener, event: kernel.response, method: onKernelResponse }
+  Atk4\Symfony\Module\Security\UserProvider: ~
+  Atk4\Symfony\Module\Security\UserAuthenticator: ~
+  Atk4\Symfony\Module\Security\UserAuthenticatorEntryPoint: ~
+  Atk4\Symfony\Module\Command\:
+    resource: '../src/Command/*'
+    tags: ['console.command']
