@@ -6,6 +6,7 @@ use Atk4\Core\Exception;
 use Atk4\Data\Model;
 use Atk4\Data\Reference\HasOne;
 use Atk4\Data\Schema\Migrator;
+use Atk4\Symfony\Module\Atk4App;
 use Atk4\Symfony\Module\Atk4Persistence;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -22,6 +23,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 class ModelsRebuildCommand extends Command
 {
     public function __construct(
+        protected Atk4App $atk4App,
         protected Atk4Persistence $atk4Persistence
     ) {
         parent::__construct();
@@ -78,7 +80,7 @@ class ModelsRebuildCommand extends Command
         try {
             foreach ($classes as $className) {
                 /** @var Model $class */
-                $class = new $className($this->atk4Persistence->getPersistence());
+                $class = $this->atk4App->getApp()->getModel($className);
 
                 $symfonyStyle->writeln('# Model:'.$className);
 

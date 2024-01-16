@@ -3,7 +3,7 @@
 namespace Atk4\Symfony\Module\Atk4\Data\Models;
 
 use Atk4\Data\Field\PasswordField;
-use Atk4\Data\Model;
+use Atk4\Symfony\Module\Atk4\Data\Atk4SymfonyModel;
 
 /**
  * @property string $name     @Atk4\Field()
@@ -11,7 +11,7 @@ use Atk4\Data\Model;
  * @property string $password @Atk4\Field()
  * @property array  $roles    @Atk4\Field()
  */
-class User extends Model
+class User extends Atk4SymfonyModel
 {
     public $table = 'user';
 

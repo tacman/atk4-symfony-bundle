@@ -5,22 +5,34 @@ declare(strict_types=1);
 namespace Atk4\Symfony\Module\Atk4\Data\Models;
 
 use Atk4\Data\Model;
+use Atk4\Symfony\Module\Atk4\Data\Atk4SymfonyModel;
+use Carbon\Carbon;
 use Detection\MobileDetect;
 
-class Audit extends Model
+/**
+ * @property string $model       @Atk4\Field()
+ * @property string $model_id    @Atk4\Field()
+ * @property string $action      @Atk4\Field()
+ * @property array  $data_before @Atk4\Field()
+ * @property array  $data_after  @Atk4\Field()
+ * @property array  $data_diff   @Atk4\Field()
+ * @property array  $user_info   @Atk4\Field()
+ * @property User   $o_user      @Atk4\RefOne(field_name="user_id")
+ * @property float  $time_taken  @Atk4\Field()
+ */
+class Audit extends Atk4SymfonyModel
 {
     public static $pending_audit;
-    /**
-     * @var Model|mixed
-     */
-    private static Model $user_model;
+
     public $table = 'audit';
 
-    public static function addModelAudit(Model $m, Model $user)
-    {
-        self::$user_model = $user;
+    protected static Model $user_model;
 
-        $m->addRef('AuditLog', [
+    public static function addModelAudit(Model $m, $actor)
+    {
+        static::$user_model = $actor;
+
+        $m->addReference('AuditLog', [
             'model' => function (Model $m) {
                 $self = new self($m->getPersistence());
                 $self->addCondition('model', get_class($m));
@@ -89,7 +101,7 @@ class Audit extends Model
         self::$pending_audit = self::preparePendingAudit($model, [], 'create');
     }
 
-    private static function preparePendingAudit(Model $model, array $data, $action)
+    private static function preparePendingAudit(Atk4SymfonyModel $model, array $data, $action)
     {
         /** @var Audit $model_audit */
         $model_audit = $model->ref('AuditLog')->createEntity();
@@ -98,8 +110,9 @@ class Audit extends Model
         $model_audit->set('action', $action);
         $model_audit->set('data_before', $data);
         $model_audit->set('user_info', self::getUserInfo());
-        $model_audit->set('user_id', self::getApplicationUserId());
+        $model_audit->set('user_id', $model->getApp()->getApplicationUser()->getId());
         $model_audit->set('time_taken', microtime(true));
+        $model_audit->set('timestamp', Carbon::now());
 
         return $model_audit;
     }
@@ -205,18 +218,6 @@ class Audit extends Model
         self::$pending_audit->set('data_after', self::normalizeModelData($model->get()))->save();
     }
 
-    private static function getApplicationUserId()
-    {
-        if (PHP_SAPI === 'cli') {
-            return 0;
-        }
-
-        return self::$user_model->isLoaded()
-            ? self::$user_model->getId()
-            : 0
-        ;
-    }
-
     public function loadLast(): self
     {
         return $this->setOrder('id', 'desc')->tryLoadAny();
@@ -226,15 +227,26 @@ class Audit extends Model
     {
         parent::init();
 
-        $this->addField('model', ['type' => 'string']);     // model class name
-        $this->addField('model_id', ['type' => 'string']);  // id of related model record
+        $user_model = static::$user_model ?? new User($this->getPersistence());
+
+        $this->addField('model', [
+            'type' => 'string',
+            'caption' => 'Ref.Model',
+        ]);     // model class name
+
+        $this->addField('model_id', [
+            'type' => 'string',
+            'caption' => 'Ref.ID',
+        ]);  // id of related model record
 
         $this->addField('action');
 
         $this->hasOne('user_id', [
-            'model' => [get_class(self::$user_model)],
-            'theirField' => self::$user_model->idField,
-            'type' => self::$user_model->getField(self::$user_model->idField)->type,
+            'model' => [get_class($user_model)],
+            'theirField' => $user_model->idField,
+            'type' => $user_model->getField($user_model->idField)->type,
+        ])->addFields([
+            'user_name' => $user_model->titleField,
         ]);
 
         $this->addField('user_info', [
@@ -243,17 +255,22 @@ class Audit extends Model
 
         $this->addField('data_before', [
             'type' => 'json',
+            'caption' => 'Before',
         ]);
 
         $this->addField('data_after', [
             'type' => 'json',
+            'caption' => 'After',
         ]);
 
         $this->addField('data_diff', [
             'type' => 'json',
+            'caption' => 'Changes',
         ]);
 
         $this->addField('time_taken', ['type' => 'float']);
+
+        $this->addField('timestamp', ['type' => 'datetime']);
 
         $this->onHook(Model::HOOK_BEFORE_SAVE, function (Model $model, bool $isUpdate) {
             $model->set(

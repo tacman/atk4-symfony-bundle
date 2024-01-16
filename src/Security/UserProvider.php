@@ -2,6 +2,7 @@
 
 namespace Atk4\Symfony\Module\Security;
 
+use Atk4\Symfony\Module\Atk4App;
 use Atk4\Symfony\Module\Atk4Persistence;
 use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
 use Symfony\Component\Security\Core\Exception\UserNotFoundException;
@@ -12,11 +13,10 @@ use Symfony\Component\Security\Core\User\UserProviderInterface;
 
 class UserProvider implements UserProviderInterface, PasswordUpgraderInterface
 {
-    private \Atk4\Data\Persistence $persistence;
-
-    public function __construct(Atk4Persistence $atk4Persistence)
-    {
-        $this->persistence = $atk4Persistence->getPersistence();
+    public function __construct(
+        private Atk4App $atk4App,
+        private Atk4Persistence $atk4Persistence
+    ) {
     }
 
     /**
@@ -30,7 +30,8 @@ class UserProvider implements UserProviderInterface, PasswordUpgraderInterface
      */
     public function loadUserByIdentifier($identifier): UserInterface
     {
-        $model = new \App\Models\User($this->persistence);
+        $userClass = $this->atk4App->getApp()->getUserModel();
+        $model = new $userClass($this->atk4Persistence->getPersistence());
         $entity = $model->tryLoadBy('email', '=', $identifier);
 
         $sessionUser = new User();

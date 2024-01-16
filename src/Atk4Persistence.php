@@ -2,10 +2,9 @@
 
 namespace Atk4\Symfony\Module;
 
-use App\Models\User;
 use Atk4\Core\Exception;
-use Atk4\Data\Model;
 use Atk4\Data\Persistence;
+use Atk4\Symfony\Module\Atk4\Data\Atk4SymfonyModel;
 use Atk4\Symfony\Module\Atk4\Data\Decorators\IModelAuditable;
 use Atk4\Symfony\Module\Atk4\Data\Decorators\IModelSoftDeletable;
 use Atk4\Symfony\Module\Atk4\Data\Decorators\IModelTrackable;
@@ -21,6 +20,7 @@ class Atk4Persistence
     private static array $persistences = [];
 
     public function __construct(
+        private Atk4App $atk4app,
         private array $config,
         private Security $security
     ) {
@@ -56,8 +56,11 @@ class Atk4Persistence
 
         self::$persistences[$name]->onHook(
             Persistence::HOOK_AFTER_ADD,
-            fx: function (Persistence $persistence, Model $model) {
-                $actor = new User($persistence);
+            fx: function (Persistence $persistence, Atk4SymfonyModel $model) {
+                $model->setApp($this->atk4app->getApp());
+
+                $class = $model->getApp()->getUserModel();
+                $actor = new $class($persistence);
                 $securityUser = $this->security->getUser();
 
                 if (null !== $securityUser) {

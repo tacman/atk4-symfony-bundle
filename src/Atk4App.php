@@ -21,6 +21,7 @@ class Atk4App
     ) {
         $this->config = $this->normalizeSymfonyConfig($config);
         $this->config['container'] = $kernel->getContainer();
+        $this->config['user_class'] = $this->config['security']['user_class'] ?? Atk4\Data\Models\User::class;
 
         if (isset($this->config['security'])) {
             unset($this->config['security']);
@@ -54,6 +55,10 @@ class Atk4App
 
         $config['cdn']['chart.js'] = $config['cdn']['chart'];
         unset($config['cdn']['chart']);
+
+        if (PHP_SAPI === 'cli') {
+            return $config;
+        }
 
         foreach ($config['cdn'] as &$uri) {
             $uri = $this->requestStack->getCurrentRequest()->getUriForPath($uri);
