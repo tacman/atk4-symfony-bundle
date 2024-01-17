@@ -17,7 +17,7 @@ class ModelHelper
         $model->addField('is_deleted', [
             'type' => 'boolean',
             'system' => true,
-            'default' => 0,
+            'default' => false,
         ]);
 
         $model->addCondition('is_deleted', false);
