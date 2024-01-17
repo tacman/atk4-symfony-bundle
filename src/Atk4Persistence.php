@@ -63,14 +63,17 @@ class Atk4Persistence
                 $actor = new $class($persistence);
                 $securityUser = $this->security->getUser();
 
+                if (is_a($model, IModelSoftDeletable::class, true)) {
+                    ModelHelper::addSoftDeletable($model);
+                }
+                if (is_a($actor, IModelSoftDeletable::class, true)) {
+                    ModelHelper::addSoftDeletable($actor);
+                }
+
                 if (null !== $securityUser) {
                     $actor = $actor->loadBy('email', $this->security->getUser()->getUserIdentifier());
                 } else {
                     $actor = $actor->createEntity();
-                }
-
-                if (is_a($model, IModelSoftDeletable::class, true)) {
-                    ModelHelper::addSoftDeletable($model);
                 }
 
                 if (is_a($model, IModelTrackable::class, true)) {
