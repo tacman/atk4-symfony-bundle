@@ -58,7 +58,7 @@ class ModelsRebuildCommand extends Command
                 }
 
                 $src = file_get_contents($file->getRealPath());
-                preg_match('#^namespace\s+(.+?);.*class\s+(\w+).+;$#sm', $src, $m);
+                preg_match('#^namespace\s+(.+?);.*class\s+(\w+).+$#sm', $src, $m);
                 $className = $m[1].'\\'.$m[2];
 
                 $reflClass = new \ReflectionClass($className);
