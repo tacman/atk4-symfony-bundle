@@ -143,7 +143,7 @@ class ModelHelper
                     if (function_exists('_td')) {
                         throw new ValidationException([$field => _td('validation', '{field} with such value already exists', ['{field}' => ucwords($field)])], $model);
                     }
-                    throw new ValidationException([$field => 'Field with such value already exists'], $model);
+                    throw new ValidationException([$field => ucwords($field) . ' with such value already exists'], $model);
                 }
             }
         });
