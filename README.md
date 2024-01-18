@@ -15,14 +15,13 @@ composer config minimum-stability dev
 ```
 
 ```
-composer require abbadon1334/symfony-atk4-bundle:"*"
+composer require abbadon1334/atk4-symfony-bundle:"*"
 
 ```
 will add bundle config + bundle files in public folder
 
 in bin/console there is a useful command to rebuild the database during development
 the rebuild is based on models 
-```
 
 ```
 bin/console models:rebuild -p src/Models
