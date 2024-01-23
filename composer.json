@@ -24,7 +24,7 @@
         "matomo/device-detector": "^6.1",
         "mobiledetect/mobiledetectlib": "^3.74",
         "symfony/filesystem": "6.3.*",
-        "nesbot/carbon": "2.72.1"
+        "nesbot/carbon": "2.72.2"
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^3.26",
