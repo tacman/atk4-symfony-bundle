@@ -56,34 +56,23 @@ class Atk4Persistence
 
         self::$persistences[$name]->onHook(
             Persistence::HOOK_AFTER_ADD,
-            fx: function (Persistence $persistence, Atk4SymfonyModel $model) {
-                $model->setApp($this->atk4app->getApp());
-
-                $class = $model->getApp()->getUserModel();
-                $actor = new $class($persistence);
-                $securityUser = $this->security->getUser();
+            fx: function (Persistence $persistence, \Atk4\Data\Model $model) {
+                if (is_a($model, Atk4SymfonyModel::class, true)) {
+                    $model->setApp($this->atk4app->getApp());
+                }
 
                 if (is_a($model, IModelSoftDeletable::class, true)) {
                     ModelHelper::addSoftDeletable($model);
                 }
-                if (is_a($actor, IModelSoftDeletable::class, true)) {
-                    ModelHelper::addSoftDeletable($actor);
-                }
-
-                if (null !== $securityUser) {
-                    $actor = $actor->loadBy('email', $this->security->getUser()->getUserIdentifier());
-                } else {
-                    $actor = $actor->createEntity();
-                }
 
                 if (is_a($model, IModelTrackable::class, true)) {
-                    ModelHelper::addTrackableCreate($model, $actor);
-                    ModelHelper::addTrackableUpdate($model, $actor);
-                    ModelHelper::addTrackableDelete($model, $actor);
+                    ModelHelper::addTrackableCreate($model, $this->atk4app->getApp()->getApplicationUser());
+                    ModelHelper::addTrackableUpdate($model, $this->atk4app->getApp()->getApplicationUser());
+                    ModelHelper::addTrackableDelete($model, $this->atk4app->getApp()->getApplicationUser());
                 }
 
                 if (is_a($model, IModelAuditable::class, true)) {
-                    Audit::addModelAudit($model, $actor);
+                    Audit::addModelAudit($model, $this->atk4app->getApp()->getApplicationUser());
                 }
             }
         );

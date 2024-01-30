@@ -56,7 +56,7 @@ class Atk4App
         $config['cdn']['chart.js'] = $config['cdn']['chart'];
         unset($config['cdn']['chart']);
 
-        if ($this->requestStack->getCurrentRequest() === null) {
+        if (null === $this->requestStack->getCurrentRequest()) {
             return $config;
         }
 

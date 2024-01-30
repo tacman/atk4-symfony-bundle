@@ -22,6 +22,11 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 )]
 class ModelsRebuildCommand extends Command
 {
+    /**
+     * @var array<string> List of processed models
+     */
+    private static $processedModel = [];
+
     public function __construct(
         protected Atk4App $atk4App,
         protected Atk4Persistence $atk4Persistence
@@ -79,48 +84,7 @@ class ModelsRebuildCommand extends Command
 
         try {
             foreach ($classes as $className) {
-                /** @var Model $class */
-                $class = $this->atk4App->getApp()->getModel($className);
-
-                $symfonyStyle->writeln('# Model:'.$className);
-
-                $migration_table = new Migrator($class->getPersistence());
-                $migration_table->table($class->table);
-
-                $migration = new Migrator($class);
-
-                $migration->dropIfExists(true);
-                $migration->create();
-
-                foreach ($class->getReferences() as $reference) {
-                    if (is_a($reference, HasOne::class, true)) {
-                        $migration->createForeignKey($reference);
-                    }
-                }
-
-                continue;
-                if (!$migration_table->isTableExists($class->table)) {
-                    $createFlags = AbstractPlatform::CREATE_INDEXES | AbstractPlatform::CREATE_FOREIGNKEYS;
-
-                    $res = $migration->getConnection()->getDatabasePlatform()->getCreateTableSQL($migration->table, $createFlags);
-
-                    echo $res[0].';'.PHP_EOL;
-                    continue;
-                }
-
-                $tableDiff = $migration_table->getConnection()->createSchemaManager()->createComparator()
-                    ->compareTables($migration->table, $migration_table->table);
-
-                if ($tableDiff->isEmpty()) {
-                    $symfonyStyle->writeln('# '.$className.' is up to date');
-                    continue;
-                }
-
-                $symfonyStyle->writeln('# '.$className.' is not up to date');
-
-                $res = $migration->getConnection()->getDatabasePlatform()->getAlterTableSQL($tableDiff);
-
-                echo $res[0].';'.PHP_EOL;
+                $this->processModel($symfonyStyle, $className);
             }
         } catch (\Atk4\Data\Exception $e) {
             $symfonyStyle->error($e->getColorfulText());
@@ -131,5 +95,71 @@ class ModelsRebuildCommand extends Command
         }
 
         return Command::SUCCESS;
+    }
+
+    private function processModel(SymfonyStyle $symfonyStyle, mixed $className)
+    {
+        if (in_array($className, static::$processedModel)) {
+            $symfonyStyle->writeln('# '.$className.' already processed');
+
+            return;
+        }
+
+        static::$processedModel[] = $className;
+
+        $symfonyStyle->writeln('# Model:'.$className);
+
+        /** @var Model $class */
+        $class = $this->atk4App->getApp()->getModel($className);
+
+        $migration = new Migrator($class);
+        $migration->dropIfExists(true);
+
+        $table_exists = $migration->isTableExists($class->table);
+
+        if (!$table_exists) {
+            $createFlags = AbstractPlatform::CREATE_INDEXES | AbstractPlatform::CREATE_FOREIGNKEYS;
+
+            $statements = $migration->getConnection()->getDatabasePlatform()->getCreateTableSQL($migration->table, $createFlags);
+
+            foreach ($statements as $sql) {
+                $migration->getConnection()->getConnection()->executeQuery($sql);
+            }
+
+            $symfonyStyle->writeln('# '.$className.': table '.$class->table.' is up to date');
+        }
+
+        foreach ($class->getReferences() as $reference) {
+            if (is_a($reference, HasOne::class, true)) {
+                $this->processModel($symfonyStyle, $reference->model[0]);
+                $migration->createForeignKey($reference);
+            }
+        }
+
+        if (!$table_exists) {
+            return;
+        }
+
+        $migration = new Migrator($class);
+
+        $tableDiff = $migration->getConnection()->createSchemaManager()->createComparator()
+            ->compareTables(
+                $migration->table,
+                $migration->getConnection()->createSchemaManager()->introspectTable($class->table)
+            );
+
+        if ($tableDiff->isEmpty()) {
+            $symfonyStyle->writeln('# '.$className.': table '.$class->table.' no changes');
+
+            return;
+        }
+
+        $symfonyStyle->writeln('# '.$className.': table '.$class->table.' is not up to date');
+
+        $statements = $migration->getConnection()->getDatabasePlatform()->getAlterTableSQL($tableDiff);
+
+        foreach ($statements as $sql) {
+            $migration->getConnection()->getConnection()->executeQuery($sql);
+        }
     }
 }

@@ -80,16 +80,16 @@ class Audit extends Atk4SymfonyModel
         // delete
         $m->onHook(
             Model::HOOK_BEFORE_DELETE,
-            (function (Model $m, $model_id) {
-                self::beforeDelete($m, $model_id);
+            (function (Model $m) {
+                self::beforeDelete($m);
             })(...),
             [],
             -100
         ); // called as soon as possible
         $m->onHook(
             Model::HOOK_AFTER_DELETE,
-            (function (Model $m, $model_id) {
-                self::afterDelete($m, $model_id);
+            (function (Model $m) {
+                self::afterDelete($m);
             })(...),
             [],
             100
@@ -203,7 +203,7 @@ class Audit extends Atk4SymfonyModel
         self::$pending_audit->set('data_after', self::normalizeModelData($model->get()))->save();
     }
 
-    public static function beforeDelete(Model $model, $model_id)
+    public static function beforeDelete(Model $model)
     {
         $intersect = array_merge(
             self::normalizeModelData($model->get()),
@@ -213,7 +213,7 @@ class Audit extends Atk4SymfonyModel
         self::$pending_audit = self::preparePendingAudit($model, $intersect, 'delete');
     }
 
-    public static function afterDelete(Model $model, $model_id)
+    public static function afterDelete(Model $model)
     {
         self::$pending_audit->set('data_after', self::normalizeModelData($model->get()))->save();
     }
@@ -227,7 +227,7 @@ class Audit extends Atk4SymfonyModel
     {
         parent::init();
 
-        $user_model = static::$user_model ?? new User($this->getPersistence());
+        $user_model = static::$user_model ?? new User($this->getPersistence()); // TODO Find another way to recover App user model
 
         $this->addField('model', [
             'type' => 'string',
