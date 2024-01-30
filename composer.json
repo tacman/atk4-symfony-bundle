@@ -12,19 +12,19 @@
     ],
     "require": {
         "php": ">8.0",
-        "symfony/dependency-injection": "^6.3",
-        "symfony/config": "^6.3",
-        "symfony/http-kernel": "^6.3",
-        "symfony/yaml": "^6.3",
-        "symfony/translation": "6.3.*",
+        "symfony/dependency-injection": "^6.3||^7.0",
+        "symfony/config": "^6.3||^7.0",
+        "symfony/http-kernel": "^6.3||^7.0",
+        "symfony/yaml": "^6.3||^7.0",
+        "symfony/translation": "^6.3||^7.0",
         "rogervila/array-diff-multidimensional": "2.1.0",
-        "atk4/ui": "5.0.0",
-        "symfony/security-bundle": "v6.3.11",
+        "atk4/ui": "^5.0",
+        "symfony/security-bundle": "^6.3",
         "ramsey/uuid": "4.7.5",
         "matomo/device-detector": "^6.1",
         "mobiledetect/mobiledetectlib": "^3.74",
-        "symfony/filesystem": "6.3.*",
-        "nesbot/carbon": "2.72.1"
+        "symfony/filesystem": "^6.3||^7.0",
+        "nesbot/carbon": "^2.72"
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^3.26",
