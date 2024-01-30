@@ -19,7 +19,7 @@
         "symfony/translation": "^6.3||^7.0",
         "rogervila/array-diff-multidimensional": "2.1.0",
         "atk4/ui": "^5.0",
-        "symfony/security-bundle": "^6.3",
+        "symfony/security-bundle": "^6.3||^7.0",
         "ramsey/uuid": "4.7.5",
         "matomo/device-detector": "^6.1",
         "mobiledetect/mobiledetectlib": "^3.74",
